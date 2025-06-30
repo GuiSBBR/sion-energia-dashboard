@@ -1,5 +1,8 @@
-
-import React from 'react';
+import React, { useState } from 'react';
+import { Download } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface VisaoConsolidadaProps {
   selectedMonth: string;
@@ -10,6 +13,13 @@ export const VisaoConsolidada: React.FC<VisaoConsolidadaProps> = ({
   selectedMonth,
   dadosCooperado
 }) => {
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [selectedUCs, setSelectedUCs] = useState<string[]>([]);
+  const [exportPeriod, setExportPeriod] = useState<'current' | 'custom' | 'all'>('current');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const { toast } = useToast();
+
   // Calcular totais consolidados
   const totaisConsolidados = Object.entries(dadosCooperado.unidadesConsumidoras).reduce(
     (totais: any, [ucId, ucData]: [string, any]) => {
@@ -38,13 +48,191 @@ export const VisaoConsolidada: React.FC<VisaoConsolidadaProps> = ({
     }
   );
 
+  const handleUCSelection = (ucId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedUCs([...selectedUCs, ucId]);
+    } else {
+      setSelectedUCs(selectedUCs.filter(id => id !== ucId));
+    }
+  };
+
+  const handleSelectAllUCs = () => {
+    const allUCIds = Object.keys(dadosCooperado.unidadesConsumidoras);
+    setSelectedUCs(selectedUCs.length === allUCIds.length ? [] : allUCIds);
+  };
+
+  const handleExportData = () => {
+    if (selectedUCs.length === 0) {
+      toast({
+        title: "Erro na exportação",
+        description: "Selecione pelo menos uma unidade consumidora",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (exportPeriod === 'custom' && (!customStartDate || !customEndDate)) {
+      toast({
+        title: "Erro na exportação", 
+        description: "Defina as datas de início e fim para o período personalizado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Aqui você implementaria a lógica de exportação real
+    console.log('Exportando dados:', {
+      selectedUCs,
+      exportPeriod,
+      customStartDate,
+      customEndDate
+    });
+
+    toast({
+      title: "Exportação iniciada",
+      description: `Exportando dados de ${selectedUCs.length} unidade(s) consumidora(s)`,
+    });
+
+    setIsExportDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="dashboard-card p-6">
-        <h1 className="text-2xl font-bold text-sion-text mb-6">Visão Consolidada</h1>
-        <p className="text-sion-text-secondary">
-          Resumo de todas as suas unidades consumidoras para o mês selecionado
-        </p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-sion-text mb-2">Visão Consolidada</h1>
+            <p className="text-sion-text-secondary">
+              Resumo de todas as suas unidades consumidoras para o mês selecionado
+            </p>
+          </div>
+          
+          <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-sion-green hover:bg-sion-green/90 text-white">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar Dados
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Exportar Dados</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Seleção de Unidades Consumidoras */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-medium">Unidades Consumidoras</h3>
+                    <button 
+                      onClick={handleSelectAllUCs}
+                      className="text-sion-blue hover:underline text-sm"
+                    >
+                      {selectedUCs.length === Object.keys(dadosCooperado.unidadesConsumidoras).length ? 
+                        'Desmarcar todas' : 'Selecionar todas'}
+                    </button>
+                  </div>
+                  
+                  <div className="max-h-48 overflow-y-auto border rounded-lg p-3 space-y-2">
+                    {Object.entries(dadosCooperado.unidadesConsumidoras).map(([ucId, ucData]: [string, any]) => (
+                      <label key={ucId} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                          type="checkbox"
+                          checked={selectedUCs.includes(ucId)}
+                          onChange={(e) => handleUCSelection(ucId, e.target.checked)}
+                          className="h-4 w-4 text-sion-blue focus:ring-sion-blue border-gray-300 rounded"
+                        />
+                        <div>
+                          <div className="font-medium text-sion-text">{ucData.nome}</div>
+                          <div className="text-sm text-sion-text-secondary">{ucId}</div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Seleção de Período */}
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Período</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="period"
+                        value="current"
+                        checked={exportPeriod === 'current'}
+                        onChange={(e) => setExportPeriod(e.target.value as any)}
+                        className="h-4 w-4 text-sion-blue focus:ring-sion-blue"
+                      />
+                      <span>Mês atual selecionado ({new Date(selectedMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })})</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="period"
+                        value="all"
+                        checked={exportPeriod === 'all'}
+                        onChange={(e) => setExportPeriod(e.target.value as any)}
+                        className="h-4 w-4 text-sion-blue focus:ring-sion-blue"
+                      />
+                      <span>Todos os períodos disponíveis</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="period"
+                        value="custom"
+                        checked={exportPeriod === 'custom'}
+                        onChange={(e) => setExportPeriod(e.target.value as any)}
+                        className="h-4 w-4 text-sion-blue focus:ring-sion-blue"
+                      />
+                      <span>Período personalizado</span>
+                    </label>
+                    
+                    {exportPeriod === 'custom' && (
+                      <div className="ml-7 grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-sion-text-secondary mb-1">
+                            Data início
+                          </label>
+                          <input
+                            type="month"
+                            value={customStartDate}
+                            onChange={(e) => setCustomStartDate(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-sion-blue focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-sion-text-secondary mb-1">
+                            Data fim
+                          </label>
+                          <input
+                            type="month"
+                            value={customEndDate}
+                            onChange={(e) => setCustomEndDate(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-sion-blue focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Botões de Ação */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleExportData} className="bg-sion-green hover:bg-sion-green/90">
+                    Exportar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Cards de Destaque Consolidados */}
