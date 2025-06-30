@@ -139,7 +139,7 @@ export const FaturasBoletos: React.FC<FaturasBoletoProps> = ({
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-lg font-bold text-sion-text">
-                        R$ {dados.valorBoletoSion?.toFixed(2) || '0.00'}
+                        R$ {dados.valorBoletoSion.toFixed(2)}
                       </span>
                     </td>
                     <td className="py-4 px-4">
@@ -183,7 +183,7 @@ export const FaturasBoletos: React.FC<FaturasBoletoProps> = ({
         <div className="metric-card">
           <h3 className="text-sm font-medium text-sion-text-secondary mb-2">Total Pago</h3>
           <p className="text-2xl font-bold text-sion-text">
-            R$ {historico.reduce((sum, [, dados]: [string, any]) => sum + (dados.valorBoletoSion || 0), 0).toFixed(2)}
+            R$ {historico.reduce((sum, [, dados]) => sum + dados.valorBoletoSion, 0).toFixed(2)}
           </p>
           <p className="text-sm text-sion-text-secondary">Últimos {historico.length} meses</p>
         </div>
@@ -191,7 +191,7 @@ export const FaturasBoletos: React.FC<FaturasBoletoProps> = ({
         <div className="metric-card">
           <h3 className="text-sm font-medium text-sion-text-secondary mb-2">Economia Total</h3>
           <p className="text-2xl font-bold text-sion-green">
-            R$ {historico.reduce((sum, [, dados]: [string, any]) => sum + (dados.economia || 0), 0).toFixed(2)}
+            R$ {historico.reduce((sum, [, dados]) => sum + dados.economia, 0).toFixed(2)}
           </p>
           <p className="text-sm text-sion-text-secondary">Economizado com a SION</p>
         </div>
@@ -199,7 +199,7 @@ export const FaturasBoletos: React.FC<FaturasBoletoProps> = ({
         <div className="metric-card">
           <h3 className="text-sm font-medium text-sion-text-secondary mb-2">Média Mensal</h3>
           <p className="text-2xl font-bold text-sion-text">
-            R$ {(historico.reduce((sum, [, dados]: [string, any]) => sum + (dados.valorBoletoSion || 0), 0) / historico.length).toFixed(2)}
+            R$ {(historico.reduce((sum, [, dados]) => sum + dados.valorBoletoSion, 0) / historico.length).toFixed(2)}
           </p>
           <p className="text-sm text-sion-text-secondary">Valor médio das faturas</p>
         </div>

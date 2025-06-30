@@ -19,9 +19,9 @@ export const Sustentabilidade: React.FC<SustentabilidadeProps> = ({
     (totais: any, [ucId, ucData]: [string, any]) => {
       const dadosMes = ucData.historico[selectedMonth];
       if (dadosMes) {
-        totais.consumoTotal += dadosMes.consumo || 0;
-        totais.co2EvitadoTotal += dadosMes.co2Evitado || 0;
-        totais.arvoresEquivalentesTotal += dadosMes.arvoresEquivalentes || 0;
+        totais.consumoTotal += dadosMes.consumo;
+        totais.co2EvitadoTotal += dadosMes.co2Evitado;
+        totais.arvoresEquivalentesTotal += dadosMes.arvoresEquivalentes;
       }
       return totais;
     },
@@ -200,7 +200,7 @@ export const Sustentabilidade: React.FC<SustentabilidadeProps> = ({
               <span className="text-sion-text-secondary">CO₂ evitado este ano:</span>
               <span className="font-medium text-sion-green">
                 {Object.values(dadosCooperado.unidadesConsumidoras).reduce((total: number, uc: any) => {
-                  return total + Object.values(uc.historico).reduce((sum: number, mes: any) => sum + (mes.co2Evitado || 0), 0);
+                  return total + Object.values(uc.historico).reduce((sum: number, mes: any) => sum + mes.co2Evitado, 0);
                 }, 0).toFixed(1)} kg
               </span>
             </div>
@@ -208,7 +208,7 @@ export const Sustentabilidade: React.FC<SustentabilidadeProps> = ({
               <span className="text-sion-text-secondary">Árvores equivalentes:</span>
               <span className="font-medium text-sion-green">
                 {Object.values(dadosCooperado.unidadesConsumidoras).reduce((total: number, uc: any) => {
-                  return total + Object.values(uc.historico).reduce((sum: number, mes: any) => sum + (mes.arvoresEquivalentes || 0), 0);
+                  return total + Object.values(uc.historico).reduce((sum: number, mes: any) => sum + mes.arvoresEquivalentes, 0);
                 }, 0).toFixed(1)}
               </span>
             </div>
